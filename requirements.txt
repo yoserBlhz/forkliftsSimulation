@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+asyncpg
+SQLAlchemy>=1.4 
