@@ -2,7 +2,7 @@ import asyncio
 from typing import Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.models import Forklift, Order, DispatchPlan, OperationLog, KPI, Simulation
+from app.models import Forklift, Order, DispatchPlan, OperationLog, KPI, Simulation, LocationList
 from app.db import AsyncSessionLocal
 from datetime import datetime
 
@@ -49,6 +49,13 @@ class SimulationEngine:
                     forklifts = (await session.execute(
                         select(Forklift)
                     )).scalars().all()
+                    # Fetch all locations for forklifts and orders
+                    order_location_ids = [o.pickup_location_id for o in orders] + [o.delivery_location_id for o in orders]
+                    all_location_ids = set(location_ids + order_location_ids)
+                    locations = (await session.execute(
+                        select(LocationList).where(LocationList.id.in_(all_location_ids))
+                    )).scalars().all()
+                    location_map = {loc.id: loc for loc in locations}
                     orders = (await session.execute(
                         select(Order)
                     )).scalars().all()
@@ -62,12 +69,14 @@ class SimulationEngine:
                             continue
                         # Move towards pickup if not at pickup
                         if order.status == 'pending':
-                            dx = order.pickup_x - forklift.x
-                            dy = order.pickup_y - forklift.y
+                            forklift_loc = location_map.get(forklift.location_id)
+                            pickup_loc = location_map.get(order.pickup_location_id)
+                            dx = pickup_loc.displayX - forklift_loc.displayX
+                            dy = pickup_loc.displayY - forklift_loc.displayY
                             if dx != 0:
-                                forklift.x += 1 if dx > 0 else -1
+                                forklift_loc.displayX += 1 if dx > 0 else -1
                             elif dy != 0:
-                                forklift.y += 1 if dy > 0 else -1
+                                forklift_loc.displayY += 1 if dy > 0 else -1
                             else:
                                 order.status = 'in_progress'
                                 # Log pickup
@@ -80,12 +89,14 @@ class SimulationEngine:
                                 ))
                         # Move towards delivery if at pickup
                         elif order.status == 'in_progress':
-                            dx = order.delivery_x - forklift.x
-                            dy = order.delivery_y - forklift.y
+                            forklift_loc = location_map.get(forklift.location_id)
+                            delivery_loc = location_map.get(order.delivery_location_id)
+                            dx = delivery_loc.displayX - forklift_loc.displayX
+                            dy = delivery_loc.displayY - forklift_loc.displayY
                             if dx != 0:
-                                forklift.x += 1 if dx > 0 else -1
+                                forklift_loc.displayX += 1 if dx > 0 else -1
                             elif dy != 0:
-                                forklift.y += 1 if dy > 0 else -1
+                                forklift_loc.displayY += 1 if dy > 0 else -1
                             else:
                                 order.status = 'done'
                                 plan.end_time = datetime.utcnow()

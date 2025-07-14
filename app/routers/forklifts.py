@@ -13,8 +13,7 @@ router = APIRouter(prefix="/forklifts", tags=["forklifts"])
 class ForkliftBase(BaseModel):
     name: str
     status: str
-    x: int
-    y: int
+    location_id: int
 
 class ForkliftCreate(ForkliftBase):
     pass
@@ -22,8 +21,7 @@ class ForkliftCreate(ForkliftBase):
 class ForkliftUpdate(BaseModel):
     name: Optional[str]
     status: Optional[str]
-    x: Optional[int]
-    y: Optional[int]
+    location_id: Optional[int]
 
 class ForkliftOut(ForkliftBase):
     id: int

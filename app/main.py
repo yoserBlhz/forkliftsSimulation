@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers.forklifts import router as forklifts_router
 from app.routers.orders import router as orders_router
 from app.routers.plans import router as plans_router
@@ -8,6 +9,14 @@ from app.routers.operation_logs import router as operation_logs_router
 from app.routers.simulations import router as simulations_router
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(forklifts_router)
 app.include_router(orders_router)

@@ -2,16 +2,32 @@ CREATE TABLE forklifts (
     id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     status TEXT NOT NULL,
-    x INT NOT NULL,
-    y INT NOT NULL
+    location_id INT REFERENCES locationList(id)
+);
+
+CREATE TABLE mapList (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+CREATE TABLE locationMapList (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    mapId INT REFERENCES mapList(id)
+);
+
+CREATE TABLE locationList (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    mapId INT REFERENCES mapList(id),
+    displayX INT NOT NULL,
+    displayY INT NOT NULL
 );
 
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
-    pickup_x INT NOT NULL,
-    pickup_y INT NOT NULL,
-    delivery_x INT NOT NULL,
-    delivery_y INT NOT NULL,
+    pickup_location_id INT REFERENCES locationlist(id),
+    delivery_location_id INT REFERENCES locationlist(id),
     status TEXT NOT NULL
 );
 

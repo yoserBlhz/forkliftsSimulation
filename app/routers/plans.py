@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.db import get_session
-from app.models import DispatchPlan
+from app.models import DispatchPlan, Order, Forklift
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/plans", tags=["plans"])
 
@@ -28,10 +29,41 @@ class PlanOut(PlanBase):
     class Config:
         orm_mode = True
 
-@router.get("/", response_model=List[PlanOut])
+def to_dict(obj):
+    if obj is None:
+        return None
+    d = dict(obj.__dict__)
+    d.pop('_sa_instance_state', None)
+    return d
+
+# @router.get("/", response_model=List[PlanOut])
+# async def list_plans(session: AsyncSession = Depends(get_session)):
+#     result = await session.execute(select(DispatchPlan))
+#     return result.scalars().all()
+
+@router.get("/all", response_model=List[dict])
 async def list_plans(session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(DispatchPlan))
-    return result.scalars().all()
+    plans = result.scalars().all()
+    # Fetch related orders and forklifts
+    order_ids = [p.order_id for p in plans]
+    forklift_ids = [p.forklift_id for p in plans]
+    orders = (await session.execute(select(Order).where(Order.id.in_(order_ids)))).scalars().all()
+    forklifts = (await session.execute(select(Forklift).where(Forklift.id.in_(forklift_ids)))).scalars().all()
+    order_map = {o.id: o for o in orders}
+    forklift_map = {f.id: f for f in forklifts}
+    return [
+        {
+            "id": p.id,
+            "forklift_id": p.forklift_id,
+            "order_id": p.order_id,
+            "start_time": p.start_time,
+            "end_time": p.end_time,
+            "simulation_id": p.simulation_id,
+            "order": to_dict(order_map.get(p.order_id)),
+            "forklift": to_dict(forklift_map.get(p.forklift_id))
+        } for p in plans
+    ]
 
 @router.get("/{plan_id}", response_model=PlanOut)
 async def get_plan(plan_id: int, session: AsyncSession = Depends(get_session)):
@@ -66,4 +98,16 @@ async def delete_plan(plan_id: int, session: AsyncSession = Depends(get_session)
         raise HTTPException(status_code=404, detail="Plan not found")
     await session.delete(db_plan)
     await session.commit()
-    return {"ok": True} 
+    return {"ok": True}
+
+@router.post("/reset_times")
+async def reset_plan_times(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(DispatchPlan).order_by(DispatchPlan.id))
+    plans = result.scalars().all()
+    now = datetime.now()  # Use local time
+    interval = timedelta(seconds=10)  # Each plan lasts 10 seconds
+    for i, plan in enumerate(plans):
+        plan.start_time = now + i * interval
+        plan.end_time = now + (i + 1) * interval
+    await session.commit()
+    return {"message": "Plan times reset to start from now."} 

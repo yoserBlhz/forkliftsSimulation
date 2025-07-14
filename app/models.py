@@ -16,16 +16,13 @@ class Forklift(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(Text, nullable=False)
     status = Column(Text, nullable=False)
-    x = Column(Integer, nullable=False)
-    y = Column(Integer, nullable=False)
+    location_id = Column(Integer, ForeignKey("locationlist.id"))
 
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, index=True)
-    pickup_x = Column(Integer, nullable=False)
-    pickup_y = Column(Integer, nullable=False)
-    delivery_x = Column(Integer, nullable=False)
-    delivery_y = Column(Integer, nullable=False)
+    pickup_location_id = Column(Integer, ForeignKey("locationlist.id"))
+    delivery_location_id = Column(Integer, ForeignKey("locationlist.id"))
     status = Column(Text, nullable=False)
 
 class DispatchPlan(Base):
@@ -59,3 +56,22 @@ class WarehouseMap(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(Text, nullable=False)
     layout = Column(JSON, nullable=False) 
+
+class MapList(Base):
+    __tablename__ = "maplist"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(Text, nullable=False)
+
+class LocationMapList(Base):
+    __tablename__ = "locationmaplist"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(Text, nullable=False)
+    mapId = Column(Integer, ForeignKey("maplist.id"))
+
+class LocationList(Base):
+    __tablename__ = "locationlist"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(Text, nullable=False)
+    mapId = Column("mapid", ForeignKey("maplist.id"))
+    displayX = Column(Integer, nullable=False)
+    displayY = Column(Integer, nullable=False) 
