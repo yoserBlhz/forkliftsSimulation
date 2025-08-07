@@ -19,7 +19,7 @@ function lerp(a, b, t) {
   return a + (b - a) * t;
 }
 
-export default function SimulationGridSimple({ locations, forklifts, orders }) {
+export default function SimulationGridSimple({ locations, forklifts, orders, onOrderStatusChange }) {
   const gridSize = getGridSize(locations);
   const [simTime, setSimTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -56,6 +56,10 @@ export default function SimulationGridSimple({ locations, forklifts, orders }) {
       }
       if (orderStatuses[idx] !== newStatus) {
         updateOrderStatus(order.id, newStatus);
+        // Notify parent component that order status changed
+        if (onOrderStatusChange) {
+          onOrderStatusChange();
+        }
       }
     });
     setOrderStatuses(orders.map((order, idx) => {
@@ -69,7 +73,7 @@ export default function SimulationGridSimple({ locations, forklifts, orders }) {
         return 'completed';
       }
     }));
-  }, [simTime, orders, duration]);
+  }, [simTime, orders, duration, onOrderStatusChange]);
 
   useEffect(() => {
     if (playing) {

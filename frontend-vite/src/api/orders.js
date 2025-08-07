@@ -9,4 +9,9 @@ export async function getOrders() {
 
 export async function updateOrderStatus(orderId, status) {
   await axios.patch(`${API_BASE}/orders/${orderId}/status`, null, { params: { status } });
+}
+
+export async function resetAllOrders() {
+  const response = await axios.post(`${API_BASE}/orders/reset-status`);
+  return response.data;
 } 

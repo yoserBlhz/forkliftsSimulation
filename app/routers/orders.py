@@ -73,4 +73,13 @@ async def delete_order(order_id: int, session: AsyncSession = Depends(get_sessio
         raise HTTPException(status_code=404, detail="Order not found")
     await session.delete(db_order)
     await session.commit()
-    return {"ok": True} 
+    return {"ok": True}
+
+@router.post("/reset-status")
+async def reset_all_order_status(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Order))
+    orders = result.scalars().all()
+    for order in orders:
+        order.status = 'pending'
+    await session.commit()
+    return {"message": "All order statuses reset to pending"} 

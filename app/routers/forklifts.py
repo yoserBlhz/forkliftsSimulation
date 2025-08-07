@@ -29,8 +29,11 @@ class ForkliftOut(ForkliftBase):
         orm_mode = True
 
 @router.get("/", response_model=List[ForkliftOut])
-async def list_forklifts(session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(Forklift))
+async def list_forklifts(status: Optional[str] = None, session: AsyncSession = Depends(get_session)):
+    query = select(Forklift)
+    if status:
+        query = query.where(Forklift.status == status)
+    result = await session.execute(query)
     return result.scalars().all()
 
 @router.get("/{forklift_id}", response_model=ForkliftOut)
@@ -88,7 +91,7 @@ async def unblock_forklift(forklift_id: int, session: AsyncSession = Depends(get
     forklift = await session.get(Forklift, forklift_id)
     if not forklift:
         raise HTTPException(status_code=404, detail="Forklift not found")
-    forklift.status = "idle"
+    forklift.status = "available"
     session.add(OperationLog(
         timestamp=datetime.utcnow(),
         forklift_id=forklift.id,
@@ -115,4 +118,13 @@ async def update_forklift_status(forklift_id: int, status_update: ForkliftStatus
         details=f"Forklift {forklift.id} status changed from {old_status} to {status_update.status}"
     ))
     await session.commit()
-    return {"message": f"Forklift {forklift_id} status updated to {status_update.status}."} 
+    return {"message": f"Forklift {forklift_id} status updated to {status_update.status}."}
+
+@router.post("/reset-status")
+async def reset_all_forklift_status(session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Forklift))
+    forklifts = result.scalars().all()
+    for forklift in forklifts:
+        forklift.status = 'available'
+    await session.commit()
+    return {"message": "All forklift statuses reset to available"} 

@@ -2,17 +2,25 @@ import axios from 'axios';
 
 const API_BASE = 'http://localhost:8000'; 
 
-export async function getForklifts() {
-  const response = await axios.get(`${API_BASE}/forklifts/`);
+export async function getForklifts(status = null) {
+  const params = status ? { status } : {};
+  const response = await axios.get(`${API_BASE}/forklifts/`, { params });
   return response.data;
 }
 
-export async function blockForklift(id) {
-  await axios.post(`${API_BASE}/forklifts/${id}/block`);
+export async function blockForklift(forkliftId) {
+  const response = await axios.post(`${API_BASE}/forklifts/${forkliftId}/block`);
+  return response.data;
 }
 
-export async function unblockForklift(id) {
-  await axios.post(`${API_BASE}/forklifts/${id}/unblock`);
+export async function unblockForklift(forkliftId) {
+  const response = await axios.post(`${API_BASE}/forklifts/${forkliftId}/unblock`);
+  return response.data;
+}
+
+export async function resetAllForklifts() {
+  const response = await axios.post(`${API_BASE}/forklifts/reset-status`);
+  return response.data;
 }
 
 export async function updateForkliftStatus(id, status) {

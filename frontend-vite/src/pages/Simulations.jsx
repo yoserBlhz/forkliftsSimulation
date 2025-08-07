@@ -3,8 +3,9 @@ import SimulationGrid from '../components/SimulationGrid';
 import OrdersSidebar from '../components/OrdersSidebar';
 import ForkliftList from '../components/ForkliftList';
 import SimulationGridSimple from '../components/SimulationGridSimple';
-import { getForklifts, getLocations, getMaps, getPlans, resetPlanTimes } from '../api/forklifts';
-import { getOrders } from '../api/orders';
+import ForkliftStatusList from '../components/ForkliftStatusList';
+import { getForklifts, getLocations, getMaps, getPlans, resetPlanTimes, blockForklift, unblockForklift, resetAllForklifts } from '../api/forklifts';
+import { getOrders, resetAllOrders } from '../api/orders';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -20,18 +21,24 @@ export default function Simulations() {
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ status: '', forkliftId: '' });
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [forkliftStatusFilter, setForkliftStatusFilter] = useState('');
 
   const fetchAll = async () => {
-    setLoading(true);
     try {
-      const [forklifts, locations, maps, orders, plans] = await Promise.all([
-        getForklifts(), getLocations(), getMaps(), getOrders(), getPlans()
+      setLoading(true);
+      const [forkliftsData, locationsData, mapsData, ordersData, plansData] = await Promise.all([
+        getForklifts(),
+        getLocations(),
+        getMaps(),
+        getOrders(),
+        getPlans()
       ]);
-      setForklifts(forklifts);
-      setLocations(locations);
-      setMaps(maps);
-      setOrders(orders);
-      setPlans(plans);
+      setForklifts(forkliftsData);
+      setLocations(locationsData);
+      setMaps(mapsData);
+      setOrders(ordersData);
+      setPlans(plansData);
+      setError(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -43,16 +50,30 @@ export default function Simulations() {
     fetchAll();
   }, []);
 
-  const filteredOrders = orders.filter(order => {
-    let ok = true;
-    if (filters.status && order.status !== filters.status) ok = false;
-    if (filters.forkliftId && String(order.forklift_id) !== String(filters.forkliftId)) ok = false;
-    return ok;
-  });
-
   const handleResetTimes = async () => {
     await resetPlanTimes();
     await fetchAll();
+  };
+
+  const handleBlock = async (forkliftId) => {
+    await blockForklift(forkliftId);
+    fetchAll();
+  };
+
+  const handleUnblock = async (forkliftId) => {
+    await unblockForklift(forkliftId);
+    fetchAll();
+  };
+
+  const handleResetAll = async () => {
+    await resetAllForklifts();
+    await resetAllOrders();
+    fetchAll();
+  };
+
+  const handleOrderStatusChange = () => {
+    // Refresh orders data when simulation updates order status
+    getOrders().then(setOrders);
   };
 
   if (loading) return <CircularProgress />;
@@ -60,10 +81,20 @@ export default function Simulations() {
 
   return (
     <Box sx={{ mt: 4, display: 'flex', flexDirection: 'row' }}>
-      <OrdersSidebar
-        orders={filteredOrders}
+      <ForkliftStatusList
         forklifts={forklifts}
         locations={locations}
+        onBlock={handleBlock}
+        onUnblock={handleUnblock}
+        onReset={handleResetAll}
+        statusFilter={forkliftStatusFilter}
+        onStatusFilterChange={setForkliftStatusFilter}
+      />
+      <OrdersSidebar
+        orders={orders}
+        forklifts={forklifts}
+        locations={locations}
+        plans={plans}
         onSelectOrder={setSelectedOrderId}
         selectedOrderId={selectedOrderId}
         onFilterChange={setFilters}
@@ -72,17 +103,11 @@ export default function Simulations() {
       <Box sx={{ flex: 1, pl: 2 }}>
         <Typography variant="h4" gutterBottom>Simulation</Typography>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
-          <SimulationGrid
-            locations={locations}
-            forklifts={forklifts}
-            orders={filteredOrders}
-            plans={plans}
-            highlightOrderId={selectedOrderId}
-          />
           <SimulationGridSimple
             locations={locations}
             forklifts={forklifts}
-            orders={filteredOrders}
+            orders={orders}
+            onOrderStatusChange={handleOrderStatusChange}
           />
           <button style={{ marginLeft: 24, height: 40 }} onClick={handleResetTimes}>
             Reset Simulation Times
