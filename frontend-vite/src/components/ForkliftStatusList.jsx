@@ -29,7 +29,15 @@ export default function ForkliftStatusList({ forklifts, locations, onBlock, onUn
     : forklifts;
 
   return (
-    <div style={{ width: 300, background: '#f5f5f5', padding: 16, borderRight: '1px solid #ccc', height: '100vh', overflowY: 'auto' }}>
+    <div style={{ 
+      width: 300, 
+      background: '#f5f5f5', 
+      padding: 16, 
+      borderRight: '1px solid #ccc', 
+      height: 'calc(100vh - 100px)', 
+      display: 'flex', 
+      flexDirection: 'column'
+    }} className="custom-scrollbar">
       <h3>Forklift Status</h3>
       
       {/* Status Filter */}
@@ -78,7 +86,7 @@ export default function ForkliftStatusList({ forklifts, locations, onBlock, onUn
           <span style={{ fontSize: 12 }}>Not Available</span>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, overflowY: 'auto' }}>
         {filteredForklifts.map(forklift => {
           const statusColor = getStatusColor(forklift.status);
           return (

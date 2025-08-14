@@ -23,9 +23,12 @@ export default function Simulations() {
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [forkliftStatusFilter, setForkliftStatusFilter] = useState('');
 
+  console.log('Simulations component rendering', { forklifts, locations, orders, plans, loading, error });
+
   const fetchAll = async () => {
     try {
       setLoading(true);
+      console.log('Fetching all data...');
       const [forkliftsData, locationsData, mapsData, ordersData, plansData] = await Promise.all([
         getForklifts(),
         getLocations(),
@@ -33,6 +36,7 @@ export default function Simulations() {
         getOrders(),
         getPlans()
       ]);
+      console.log('Data fetched:', { forkliftsData, locationsData, mapsData, ordersData, plansData });
       setForklifts(forkliftsData);
       setLocations(locationsData);
       setMaps(mapsData);
@@ -40,6 +44,7 @@ export default function Simulations() {
       setPlans(plansData);
       setError(null);
     } catch (err) {
+      console.error('Error fetching data:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -80,7 +85,7 @@ export default function Simulations() {
   if (error) return <Typography color="error">Error: {error}</Typography>;
 
   return (
-    <Box sx={{ mt: 4, display: 'flex', flexDirection: 'row' }}>
+    <Box sx={{ mt: 4, display: 'flex', flexDirection: 'row', height: 'calc(100vh - 120px)', overflow: 'hidden' }}>
       <ForkliftStatusList
         forklifts={forklifts}
         locations={locations}
@@ -100,27 +105,17 @@ export default function Simulations() {
         onFilterChange={setFilters}
         filters={filters}
       />
-      <Box sx={{ flex: 1, pl: 2 }}>
+      <Box sx={{ flex: 1, pl: 2, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <Typography variant="h4" gutterBottom>Simulation</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 2 }}>
+        <Box sx={{ flex: 1, overflow: 'auto' }} className="custom-scrollbar">
           <SimulationGridSimple
             locations={locations}
             forklifts={forklifts}
             orders={orders}
+            plans={plans}
             onOrderStatusChange={handleOrderStatusChange}
           />
-          <button style={{ marginLeft: 24, height: 40 }} onClick={handleResetTimes}>
-            Reset Simulation Times
-          </button>
         </Box>
-        <Typography variant="h5" gutterBottom sx={{ mt: 4 }}>Forklifts</Typography>
-        <ForkliftList
-          forklifts={forklifts}
-          locations={locations}
-          onBlock={() => {}}
-          onUnblock={() => {}}
-          onStatusChange={() => {}}
-        />
       </Box>
     </Box>
   );

@@ -44,7 +44,7 @@ export default function OrdersSidebar({ orders, forklifts, locations, plans, onS
   });
 
   return (
-    <div style={{ width: 300, background: '#f5f5f5', padding: 16, borderRight: '1px solid #ccc', height: '100vh', overflowY: 'auto' }}>
+    <div style={{ width: 300, background: '#f5f5f5', padding: 16, borderRight: '1px solid #ccc', height: 'calc(100vh - 100px)', display: 'flex', flexDirection: 'column' }} className="custom-scrollbar">
       <h3>Deliveries / Orders</h3>
       
       {/* Status Legend */}
@@ -77,7 +77,7 @@ export default function OrdersSidebar({ orders, forklifts, locations, plans, onS
           {forklifts.map(f => <option key={f.id} value={f.id}>Forklift {f.id} ({f.name})</option>)}
         </select>
       </div>
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+      <ul style={{ listStyle: 'none', padding: 0, flex: 1, overflowY: 'auto' }}>
         {filteredOrders.map(order => {
           const orderPlan = plans.find(p => p.order_id === order.id);
           const assignedForklift = orderPlan ? forklifts.find(f => f.id === orderPlan.forklift_id) : null;

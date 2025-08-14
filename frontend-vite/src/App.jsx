@@ -23,7 +23,7 @@ function App() {
         </Toolbar>
       </AppBar>
       <Sidebar />
-      <Box component="main" sx={{ flexGrow: 1, p: 3, ml: `${SIDEBAR_WIDTH}px`, mt: '64px', minHeight: '100vh', background: '#f5f5f5' }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, ml: `${SIDEBAR_WIDTH}px`, mt: '15px', minHeight: '100vh', background: '#f5f5f5' }}>
         <Routes>
           <Route path="/forklifts" element={<Dashboard />} />
           <Route path="/simulations" element={<Simulations />} />
