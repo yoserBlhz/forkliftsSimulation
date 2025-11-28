@@ -13,3 +13,5 @@ Project: Forklift Dispatch Simulator
 - Collaborated with teammates and mentors to improve usability and scalability.
 
 Outcome: Delivered a tool that helps clients optimize logistics operations, improve decision-making, and reduce warehouse costs through intuitive simulation and insights.
+
+<img width="1817" height="861" alt="Image" src="https://github.com/user-attachments/assets/f1c45fe7-bf69-4419-8902-0a74709fa223" />
